@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  phone         String?
+  city          String?
+  password      String
+  role          String     @default("REFERRER") // REFERRER, ADMIN
+  status        String     @default("ACTIVE")   // ACTIVE, INACTIVE, PENDING
+  referralCode  String?    @unique
+  termsAccepted Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  leads         Lead[]
+  documents     Document[]
+  commissions   Commission[]
+}
+
+model Lead {
+  id              String      @id @default(cuid())
+  name            String
+  email           String
+  phone           String
+  city            String?
+  projectInterest String?
+  status          String      @default("REGISTERED") // REGISTERED, CONTACTED, QUALIFIED, NEGOTIATION, SEPARATION, DOWN_PAYMENT_PAID, COMMISSION_RELEASED, COMMISSION_PAID
+  isValid         Boolean     @default(false)
+  referrerId      String
+  referrer        User        @relation(fields: [referrerId], references: [id])
+  commission      Commission?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Commission {
+  id         String   @id @default(cuid())
+  amount     Decimal  @default(0)
+  status     String   @default("PENDING") // PENDING, RELEASED, PAID
+  leadId     String   @unique
+  lead       Lead     @relation(fields: [leadId], references: [id])
+  referrerId String
+  referrer   User     @relation(fields: [referrerId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  type       String   // ID_CARD, RUT, BANK_CERT
+  url        String
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  feedback   String?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Discount {
+  id           String   @id @default(cuid())
+  commerceName String
+  category     String
+  benefit      String
+  conditions   String?
+  validity     String?
+  code         String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
