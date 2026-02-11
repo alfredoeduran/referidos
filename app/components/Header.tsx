@@ -16,7 +16,6 @@ export default async function Header() {
                     alt="Goods & Co Logo" 
                     className="h-12 w-auto transition-transform group-hover:scale-105"
                 />
-                <span className="font-bold text-xl text-indigo-900 hidden sm:block tracking-tight">Goods & Co</span>
             </Link>
           </div>
           <nav className="flex items-center gap-6">

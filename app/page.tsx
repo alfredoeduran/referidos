@@ -10,8 +10,13 @@ export default async function Home() {
       {/* Navbar */}
       <nav className="flex items-center justify-between p-6 lg:px-8 border-b border-gray-100" aria-label="Global">
         <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 text-2xl font-bold text-indigo-900">
-            Goods & Co
+          <Link href="/" className="-m-1.5 p-1.5">
+            <span className="sr-only">Goods & Co</span>
+            <img
+                className="h-12 w-auto"
+                src="https://goodsco.com.co/wp-content/uploads/elementor/thumbs/logo-rhve9fe880lsryba0aexm0awj2nb61s6ec3w0mx2d8.png"
+                alt="Goods & Co"
+            />
           </Link>
         </div>
         <div className="flex gap-x-12">

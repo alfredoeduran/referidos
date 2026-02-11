@@ -24,6 +24,7 @@ model User {
   leads         Lead[]
   documents     Document[]
   commissions   Commission[]
+  clicks        Click[]
 }
 
 model Lead {
@@ -33,13 +34,21 @@ model Lead {
   phone           String
   city            String?
   projectInterest String?
-  status          String      @default("REGISTERED") // REGISTERED, CONTACTED, QUALIFIED, NEGOTIATION, SEPARATION, DOWN_PAYMENT_PAID, COMMISSION_RELEASED, COMMISSION_PAID
+  status          String      @default("Registrado") // Registrado, Contactado, Interesado, En negociación, Cuota inicial, Pagado
   isValid         Boolean     @default(false)
   referrerId      String
   referrer        User        @relation(fields: [referrerId], references: [id])
   commission      Commission?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+}
+
+model Click {
+  id         String   @id @default(cuid())
+  referrerId String
+  referrer   User     @relation(fields: [referrerId], references: [id])
+  path       String
+  createdAt  DateTime @default(now())
 }
 
 model Commission {

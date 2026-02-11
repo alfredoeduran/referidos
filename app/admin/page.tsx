@@ -1,20 +1,41 @@
 import prisma from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { updateLeadStatus, logout, createDiscount, updateCommissionStatus, toggleLeadValidity, createLead } from '../actions'
+import { updateLeadStatus, logout, createDiscount, updateCommissionStatus, toggleLeadValidity, createLead, updateDocumentStatus, toggleUserStatus, createPartner } from '../actions'
 import { getLotes } from '@/lib/wordpress'
+import StatusBadge from '../components/StatusBadge'
+import ContactButton from '../components/ContactButton'
 
-export default async function AdminPage() {
+import AdminFilters from './AdminFilters'
+import ExportButton from '../components/ExportButton'
+
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
   
-  if (role !== 'ADMIN') {
+  if (!['ADMIN', 'SUPERADMIN', 'MANAGER'].includes(role || '')) {
     redirect('/login')
+  }
+
+  const canEdit = ['ADMIN', 'SUPERADMIN'].includes(role || '')
+  const filters = await searchParams
+
+  const whereClause: any = {}
+  
+  if (filters?.partnerId) whereClause.referrerId = filters.partnerId as string
+  if (filters?.status) whereClause.status = filters.status as string
+  if (filters?.project) whereClause.projectInterest = { contains: filters.project as string }
+  
+  if (filters?.startDate || filters?.endDate) {
+    whereClause.createdAt = {}
+    if (filters.startDate) whereClause.createdAt.gte = new Date(filters.startDate as string)
+    if (filters.endDate) whereClause.createdAt.lte = new Date(new Date(filters.endDate as string).setHours(23, 59, 59, 999))
   }
 
   const lotes = await getLotes()
 
   const leads = await prisma.lead.findMany({
+      where: whereClause,
       include: { referrer: true, commission: true },
       orderBy: { createdAt: 'desc' }
   })
@@ -31,9 +52,15 @@ export default async function AdminPage() {
     orderBy: { createdAt: 'desc' }
   })
 
+  const pendingDocuments = await prisma.document.findMany({
+    where: { status: 'PENDING' },
+    include: { user: true },
+    orderBy: { createdAt: 'desc' }
+  })
+
   // KPIs Calculation
   const totalLeads = leads.length
-  const activeLeads = leads.filter(l => ['CONTACTED', 'NEGOTIATION', 'SEPARATION'].includes(l.status)).length
+  const activeLeads = leads.filter(l => ['Contactado', 'Interesado', 'En negociación', 'Cuota inicial'].includes(l.status)).length
   const pendingCommissions = leads.filter(l => l.commission?.status === 'PENDING').length
   const paidCommissions = leads.filter(l => l.commission?.status === 'PAID').length
   const activeDiscounts = discounts.filter(d => d.isActive).length
@@ -82,6 +109,7 @@ export default async function AdminPage() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leads</th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -104,9 +132,95 @@ export default async function AdminPage() {
                                             <span className="text-sm font-bold text-gray-900">{user._count.leads}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                Activo
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                {user.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <form action={async () => {
+                                                'use server'
+                                                await toggleUserStatus(user.id)
+                                            }}>
+                                                <button className={`${user.status === 'ACTIVE' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}>
+                                                    {user.status === 'ACTIVE' ? 'Bloquear' : 'Activar'}
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
+            {/* Pending Documents Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <h2 className="text-lg font-bold text-gray-900">Documentos Pendientes</h2>
+                    <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{pendingDocuments.length} pendientes</span>
+                </div>
+                {pendingDocuments.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">No hay documentos pendientes de revisión.</div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Documento</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {pendingDocuments.map(doc => (
+                                    <tr key={doc.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{doc.user.name}</div>
+                                            <div className="text-xs text-gray-500">{doc.user.email}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {doc.type === 'ID_CARD' ? 'Cédula' : doc.type === 'RUT' ? 'RUT' : 'Cert. Bancaria'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900 text-sm flex items-center gap-1">
+                                                <span>Ver Archivo</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                            </a>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {doc.createdAt.toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div className="flex items-center gap-2">
+                                                <form action={async () => {
+                                                    'use server'
+                                                    await updateDocumentStatus(doc.id, 'APPROVED')
+                                                }}>
+                                                    <button className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1 rounded text-xs font-bold transition-colors">
+                                                        Aprobar
+                                                    </button>
+                                                </form>
+                                                <form action={async (formData) => {
+                                                    'use server'
+                                                    const reason = formData.get('reason') as string
+                                                    await updateDocumentStatus(doc.id, 'REJECTED', reason)
+                                                }} className="flex items-center gap-2">
+                                                    <input 
+                                                        name="reason" 
+                                                        required 
+                                                        placeholder="Motivo de rechazo..." 
+                                                        className="text-xs border-gray-300 rounded focus:ring-red-500 focus:border-red-500 w-32"
+                                                    />
+                                                    <button className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded text-xs font-bold transition-colors">
+                                                        Rechazar
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -117,6 +231,8 @@ export default async function AdminPage() {
             </div>
 
             {/* Manual Lead Registration */}
+            {canEdit && (
+            <>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">Registrar Nuevo Lead (Manual)</h2>
                 <form action={async (formData) => {
@@ -159,14 +275,49 @@ export default async function AdminPage() {
                     </div>
                 </form>
             </div>
+            
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Registrar Nuevo Partner</h2>
+                <form action={async (formData) => {
+                    'use server'
+                    await createPartner(formData)
+                }} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input name="name" required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm text-gray-900 bg-white" placeholder="Nombre completo" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input name="email" type="email" required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm text-gray-900 bg-white" placeholder="correo@ejemplo.com" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                        <input name="phone" required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm text-gray-900 bg-white" placeholder="+57 300..." />
+                    </div>
+                    <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                         <input name="password" type="password" required className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm text-gray-900 bg-white" placeholder="******" />
+                    </div>
+                    <div className="md:col-span-4 flex justify-end">
+                        <button className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 font-medium text-sm transition-colors">
+                            Crear Partner
+                        </button>
+                    </div>
+                </form>
+            </div>
+            </>
+            )}
 
             {/* Leads Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-gray-900">Gestión de Leads</h2>
-                    {/* Placeholder for future filters */}
-                    <div className="text-sm text-gray-400">Filtros próximamente</div>
+                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-lg font-bold text-gray-900">Gestión de Leads</h2>
+                        <ExportButton data={leads} />
+                    </div>
                 </div>
+                
+                <AdminFilters partners={referrers} projects={lotes} />
                 
                 {leads.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
@@ -241,25 +392,30 @@ export default async function AdminPage() {
                                             )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <form action={async (formData) => {
-                                                'use server'
-                                                await updateLeadStatus(lead.id, formData.get('status') as string)
-                                            }} className="flex items-center gap-2">
-                                                <select 
-                                                    name="status" 
-                                                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                                    defaultValue={lead.status}
-                                                >
-                                                    <option value="REGISTERED">Registrado</option>
-                                                    <option value="CONTACTED">Contactado</option>
-                                                    <option value="NEGOTIATION">En Negociación</option>
-                                                    <option value="DOWN_PAYMENT_PAID">Cuota Inicial</option>
-                                                    <option value="COMMISSION_PAID">Comisión Pagada</option>
-                                                </select>
-                                                <button className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md text-xs font-bold transition-colors">
-                                                    Actualizar
-                                                </button>
-                                            </form>
+                                            <div className="flex flex-col gap-2">
+                                                <ContactButton leadId={lead.id} phone={lead.phone} currentStatus={lead.status} />
+                                                
+                                                <form action={async (formData) => {
+                                                    'use server'
+                                                    await updateLeadStatus(lead.id, formData.get('status') as string)
+                                                }} className="flex items-center gap-2">
+                                                    <select 
+                                                        name="status" 
+                                                        className="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                                        defaultValue={lead.status}
+                                                    >
+                                                        <option value="Registrado">Registrado</option>
+                                                        <option value="Contactado">Contactado</option>
+                                                        <option value="Interesado">Interesado</option>
+                                                        <option value="En negociación">En negociación</option>
+                                                        <option value="Cuota inicial">Cuota inicial</option>
+                                                        <option value="Pagado">Pagado</option>
+                                                    </select>
+                                                    <button className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded-md text-xs font-bold transition-colors">
+                                                        💾
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -351,29 +507,5 @@ function KpiCard({ title, value, color = 'gray' }: { title: string, value: numbe
             <h3 className="text-xs font-medium uppercase tracking-wider opacity-70">{title}</h3>
             <p className="text-3xl font-bold mt-1">{value}</p>
         </div>
-    )
-}
-
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        REGISTERED: 'bg-gray-100 text-gray-800',
-        CONTACTED: 'bg-blue-100 text-blue-800',
-        NEGOTIATION: 'bg-yellow-100 text-yellow-800',
-        DOWN_PAYMENT_PAID: 'bg-green-100 text-green-800',
-        COMMISSION_PAID: 'bg-green-800 text-white',
-    }
-
-    const labels: Record<string, string> = {
-        REGISTERED: 'Registrado',
-        CONTACTED: 'Contactado',
-        NEGOTIATION: 'Negociación',
-        DOWN_PAYMENT_PAID: 'Cuota Inicial',
-        COMMISSION_PAID: 'Finalizado',
-    }
-
-    return (
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
-            {labels[status] || status}
-        </span>
     )
 }
