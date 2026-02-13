@@ -300,7 +300,7 @@ export async function uploadDocument(formData: FormData) {
   const cookieStore = await cookies()
   const userId = cookieStore.get('userId')?.value
 
-  if (!userId) return { error: 'No autorizado' }
+  if (!userId) return
 
   const type = formData.get('type') as string
   const url = formData.get('url') as string // For MVP using URL input
