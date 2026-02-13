@@ -144,16 +144,16 @@ export async function recordClick(code: string, path: string) {
 
 // --- ADMIN ---
 
-export async function markLeadAsContacted(leadId: string) {
+export async function markLeadAsContacted(leadId: string): Promise<void> {
   const cookieStore = await cookies()
   const userId = cookieStore.get('userId')?.value
   
-  if (!userId) return { error: 'No autorizado' }
+  if (!userId) return
 
   const lead = await prisma.lead.findUnique({ where: { id: leadId } })
   
-  if (!lead) return { error: 'Lead no encontrado' }
-  if (lead.referrerId !== userId) return { error: 'No autorizado' }
+  if (!lead) return
+  if (lead.referrerId !== userId) return
   
   // Only allow transition from 'Registrado' to 'Contactado'
   if (lead.status === 'Registrado') {
@@ -167,11 +167,11 @@ export async function markLeadAsContacted(leadId: string) {
   }
 }
 
-export async function updateLeadStatus(leadId: string, status: string, loteValue?: number) {
+export async function updateLeadStatus(leadId: string, status: string, loteValue?: number): Promise<void> {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
   
-  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
   const data: any = { status }
   if (loteValue !== undefined) {
@@ -214,14 +214,14 @@ export async function updateLeadStatus(leadId: string, status: string, loteValue
   revalidatePath('/dashboard')
 }
 
-export async function toggleUserStatus(userId: string) {
+export async function toggleUserStatus(userId: string): Promise<void> {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
   
-  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
   const user = await prisma.user.findUnique({ where: { id: userId } })
-  if (!user) return { error: 'Usuario no encontrado' }
+  if (!user) return
 
   await prisma.user.update({
     where: { id: userId },
@@ -263,14 +263,14 @@ export async function createPartner(formData: FormData) {
   }
 }
 
-export async function toggleLeadValidity(leadId: string) {
+export async function toggleLeadValidity(leadId: string): Promise<void> {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
 
-  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
   const lead = await prisma.lead.findUnique({ where: { id: leadId } })
-  if (!lead) return { error: 'Lead no encontrado' }
+  if (!lead) return
 
   await prisma.lead.update({
     where: { id: leadId },
@@ -281,11 +281,11 @@ export async function toggleLeadValidity(leadId: string) {
   revalidatePath('/dashboard')
 }
 
-export async function updateCommissionStatus(commissionId: string, status: string) {
+export async function updateCommissionStatus(commissionId: string, status: string): Promise<void> {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
 
-  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
   await prisma.commission.update({
     where: { id: commissionId },
@@ -296,7 +296,7 @@ export async function updateCommissionStatus(commissionId: string, status: strin
   revalidatePath('/dashboard')
 }
 
-export async function uploadDocument(formData: FormData) {
+export async function uploadDocument(formData: FormData): Promise<void> {
   const cookieStore = await cookies()
   const userId = cookieStore.get('userId')?.value
 
@@ -317,11 +317,11 @@ export async function uploadDocument(formData: FormData) {
   revalidatePath('/dashboard')
 }
 
-export async function updateDocumentStatus(docId: string, status: string, feedback?: string) {
+export async function updateDocumentStatus(docId: string, status: string, feedback?: string): Promise<void> {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
 
-  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
   await prisma.document.update({
     where: { id: docId },
@@ -331,11 +331,11 @@ export async function updateDocumentStatus(docId: string, status: string, feedba
   revalidatePath('/admin')
 }
 
-export async function createDiscount(formData: FormData) {
+export async function createDiscount(formData: FormData): Promise<void> {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
   
-  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
   const commerceName = formData.get('commerceName') as string
   const category = formData.get('category') as string
