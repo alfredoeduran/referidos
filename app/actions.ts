@@ -65,6 +65,10 @@ export async function login(formData: FormData) {
     return { error: 'Credenciales inválidas' }
   }
 
+  if (user.status === 'INACTIVE' || user.status === 'BLOCKED') {
+    return { error: `Acceso denegado: ${user.blockingReason || 'Su cuenta ha sido desactivada.'}` }
+  }
+
   const cookieStore = await cookies()
   cookieStore.set('userId', user.id)
   cookieStore.set('role', user.role)
@@ -163,29 +167,44 @@ export async function markLeadAsContacted(leadId: string) {
   }
 }
 
-export async function updateLeadStatus(leadId: string, status: string) {
+export async function updateLeadStatus(leadId: string, status: string, loteValue?: number) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
   
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
 
+  const data: any = { status }
+  if (loteValue !== undefined) {
+    data.loteValue = loteValue
+  }
+
   const lead = await prisma.lead.update({
     where: { id: leadId },
-    data: { status }
+    data
   })
 
-  if (status === 'Cuota inicial') {
+  // Si el estado es "Separado" (o similar que dispare la comisión), calculamos el 1.5%
+  if (status === 'Separado' && loteValue) {
+    const commissionAmount = Number(loteValue) * 0.015
+
     const existing = await prisma.commission.findUnique({
       where: { leadId }
     })
-    
+
     if (!existing) {
       await prisma.commission.create({
         data: {
           leadId,
           referrerId: lead.referrerId,
           status: 'PENDING',
-          amount: 1000000 // Mock amount
+          amount: commissionAmount
+        }
+      })
+    } else {
+      await prisma.commission.update({
+        where: { leadId },
+        data: {
+          amount: commissionAmount
         }
       })
     }
@@ -215,14 +234,14 @@ export async function toggleUserStatus(userId: string) {
 export async function createPartner(formData: FormData) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
-  
+
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
 
   const name = formData.get('name') as string
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const phone = formData.get('phone') as string
-  
+
   if (!name || !email || !password) return { error: 'Faltan campos' }
 
   const referralCode = name.substring(0, 3).toUpperCase() + Math.floor(Math.random() * 10000).toString()
@@ -247,7 +266,7 @@ export async function createPartner(formData: FormData) {
 export async function toggleLeadValidity(leadId: string) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
-  
+
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
 
   const lead = await prisma.lead.findUnique({ where: { id: leadId } })
@@ -265,7 +284,7 @@ export async function toggleLeadValidity(leadId: string) {
 export async function updateCommissionStatus(commissionId: string, status: string) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
-  
+
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
 
   await prisma.commission.update({
@@ -280,12 +299,12 @@ export async function updateCommissionStatus(commissionId: string, status: strin
 export async function uploadDocument(formData: FormData) {
   const cookieStore = await cookies()
   const userId = cookieStore.get('userId')?.value
-  
+
   if (!userId) return { error: 'No autorizado' }
 
   const type = formData.get('type') as string
   const url = formData.get('url') as string // For MVP using URL input
-  
+
   await prisma.document.create({
     data: {
       type,
@@ -301,7 +320,7 @@ export async function uploadDocument(formData: FormData) {
 export async function updateDocumentStatus(docId: string, status: string, feedback?: string) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
-  
+
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
 
   await prisma.document.update({
@@ -334,4 +353,29 @@ export async function createDiscount(formData: FormData) {
 
   revalidatePath('/admin')
   revalidatePath('/dashboard')
+}
+
+export async function updatePartnerStatus(partnerId: string, status: string, blockingReason?: string) {
+  const cookieStore = await cookies()
+  const role = cookieStore.get('role')?.value
+
+  if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) {
+    return { error: 'No autorizado' }
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: partnerId },
+      data: {
+        status,
+        blockingReason: status === 'INACTIVE' || status === 'BLOCKED' ? blockingReason : null
+      }
+    })
+
+    revalidatePath('/admin/partners')
+    return { success: true }
+  } catch (e) {
+    console.error(e)
+    return { error: 'Error al actualizar estado del partner' }
+  }
 }

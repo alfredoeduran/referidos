@@ -16,6 +16,7 @@ model User {
   password      String
   role          String     @default("REFERRER") // REFERRER, ADMIN
   status        String     @default("ACTIVE")   // ACTIVE, INACTIVE, PENDING
+  blockingReason String?
   referralCode  String?    @unique
   termsAccepted Boolean    @default(false)
   createdAt     DateTime   @default(now())
@@ -35,6 +36,7 @@ model Lead {
   city            String?
   projectInterest String?
   status          String      @default("Registrado") // Registrado, Contactado, Interesado, En negociación, Cuota inicial, Pagado
+  loteValue       Decimal?    @default(0)
   isValid         Boolean     @default(false)
   referrerId      String
   referrer        User        @relation(fields: [referrerId], references: [id])
