@@ -45,7 +45,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     where: { role: 'REFERRER' },
     include: { 
         _count: { select: { leads: true } },
-        commissions: true
+        commissions: true,
+        leads: true
     },
     orderBy: { createdAt: 'desc' }
   })
@@ -54,11 +55,19 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     orderBy: { createdAt: 'desc' }
   })
 
-  // KPIs Calculation
   const totalLeads = leads.length
-  const activeLeads = leads.filter(l => ['Contactado', 'Interesado', 'En negociación', 'Separado', 'Cuota inicial'].includes(l.status)).length
   const totalPartners = referrers.length
-  const activeDiscounts = discounts.filter(d => d.isActive).length
+
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+  const activePartners = referrers.filter(r => 
+    r.leads.some(l => l.createdAt >= startOfMonth && l.createdAt <= endOfMonth)
+  ).length
+  const activeLeads = leads.filter(l => ['Contactado', 'Interesado', 'En negociación', 'Separado', 'Cuota inicial'].includes(l.status)).length
+  const separations = leads.filter(l => l.status === 'Separado').length
+  const conversionRate = totalLeads > 0 ? Math.round((separations / totalLeads) * 100) : 0
 
   // Financials
   const pendingAmount = leads
@@ -72,15 +81,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     <div className="grid grid-cols-12 gap-6">
         {/* Left/Middle Column (KPIs + Partners) */}
         <div className="col-span-12 lg:col-span-9 space-y-6">
-                    {/* KPI Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                         <StatCard icon={Filter} label="Total Leads" value={totalLeads} />
-                        <StatCard icon={Users} label="Leads Activos" value={activeLeads} />
-                        <StatCard icon={Handshake} label="Partner" value={totalPartners} />
-                        <StatCard icon={Percent} label="Descuentos Activos" value={activeDiscounts} />
+                        <StatCard icon={Users} label="Partners Registrados" value={totalPartners} />
+                        <StatCard icon={Handshake} label="Partners Activos" value={activePartners} />
+                        <StatCard icon={Percent} label="Tasa Conversión (%)" value={conversionRate} />
+                        <StatCard icon={Wallet} label="Comisiones Pendientes" value={pendingAmount} />
+                        <StatCard icon={Wallet} label="Comisiones Pagadas" value={paidAmount} />
                     </div>
 
-                    {/* Partners List */}
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 md:p-8">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                             <h2 className="text-xl font-bold text-[#2D2D2D]">Partners Registrados</h2>
@@ -102,18 +111,19 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                             <p className="text-xs text-gray-400">Registrado: {user.createdAt.toLocaleDateString('es-ES')}</p>
                                         </div>
                                     </div>
-                                    
                                     <div className="font-mono text-sm font-bold text-gray-600 tracking-widest bg-gray-50 px-3 py-1 rounded-lg sm:bg-transparent sm:p-0">
                                         {user.referralCode}
                                     </div>
 
                                     <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                                         <span className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                            user.status === 'ACTIVE' 
-                                            ? 'bg-green-100 text-green-700' 
-                                            : 'bg-red-100 text-red-700'
+                                            user.status === 'ACTIVE'
+                                              ? 'bg-green-100 text-green-700'
+                                              : user.status === 'PENDING'
+                                                ? 'bg-yellow-100 text-yellow-700'
+                                                : 'bg-red-100 text-red-700'
                                         }`}>
-                                            {user.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                                            {user.status === 'ACTIVE' ? 'Activo' : user.status === 'PENDING' ? 'Pendiente' : 'Inactivo'}
                                         </span>
                                         <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#F97316] transition-colors" />
                                     </div>
@@ -122,48 +132,39 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                        </div>
                     </div>
                 </div>
-
-                {/* Right Column (Financials + Chart) */}
-                <div className="col-span-12 lg:col-span-3 space-y-6">
-                    {/* Financial Cards */}
-                    <FinancialCard 
-                        icon={Wallet} 
-                        label="Comisiones Pendientes" 
-                        value={pendingAmount} 
-                    />
-                    <FinancialCard 
-                        icon={Wallet} 
-                        label="Comisiones Pagadas" 
-                        value={paidAmount} 
-                    />
-
-                    {/* Chart Placeholder */}
-                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-                        <h2 className="text-sm font-bold text-[#2D2D2D] mb-6">Panorama General</h2>
-                        
-                        <div className="relative aspect-square flex items-center justify-center">
-                            {/* Simple SVG Doughnut Chart */}
-                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="40" stroke="#FEE2E2" strokeWidth="12" fill="transparent" />
-                                <circle cx="50" cy="50" r="40" stroke="#F97316" strokeWidth="12" fill="transparent" 
-                                    strokeDasharray={`${(activeLeads/totalLeads)*251.2} 251.2`} 
-                                />
-                            </svg>
-                            <div className="absolute flex flex-col items-center">
-                                <span className="text-2xl font-bold text-[#2D2D2D]">{Math.round((activeLeads/totalLeads)*100) || 0}%</span>
-                                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Leads Activos</span>
-                            </div>
-                        </div>
-
-                        {/* Legend */}
-                        <div className="mt-8 space-y-2">
-                            <LegendItem color="bg-[#F97316]" label="Leads Activos" />
-                            <LegendItem color="bg-[#FEE2E2]" label="Leads Inactivos" />
-                            <LegendItem color="bg-[#FED7AA]" label="Comisiones Pagadas" />
-                            <LegendItem color="bg-[#FFEDD5]" label="Comisiones Pendientes" />
-                        </div>
-                    </div>
-                </div>
+        <div className="col-span-12 lg:col-span-3 space-y-6">
+          <FinancialCard 
+            icon={Wallet} 
+            label="Comisiones Pendientes" 
+            value={pendingAmount} 
+          />
+          <FinancialCard 
+            icon={Wallet} 
+            label="Comisiones Pagadas" 
+            value={paidAmount} 
+          />
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+            <h2 className="text-sm font-bold text-[#2D2D2D] mb-6">Panorama General</h2>
+            <div className="relative aspect-square flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="#FEE2E2" strokeWidth="12" fill="transparent" />
+                <circle cx="50" cy="50" r="40" stroke="#F97316" strokeWidth="12" fill="transparent" 
+                  strokeDasharray={`${(activeLeads/totalLeads)*251.2} 251.2`} 
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center">
+                <span className="text-2xl font-bold text-[#2D2D2D]">{Math.round((activeLeads/totalLeads)*100) || 0}%</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Leads Activos</span>
+              </div>
+            </div>
+            <div className="mt-8 space-y-2">
+              <LegendItem color="bg-[#F97316]" label="Leads Activos" />
+              <LegendItem color="bg-[#FEE2E2]" label="Leads Inactivos" />
+              <LegendItem color="bg-[#FED7AA]" label="Comisiones Pagadas" />
+              <LegendItem color="bg-[#FFEDD5]" label="Comisiones Pendientes" />
+            </div>
+          </div>
+        </div>
             </div>
     )
 }

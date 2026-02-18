@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   output: 'standalone',
   reactCompiler: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: 20 * 1024 * 1024,
+    },
+  },
   images: {
     remotePatterns: [
       {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Lead, User } from '@prisma/client'
 import { ChevronLeft, ChevronRight, Search, Edit2, X, Save, Plus, Filter, Phone, User as UserIcon, Building, Check, AlertCircle } from 'lucide-react'
 import { updateLeadStatus, toggleLeadValidity, createLead } from '@/app/actions'
@@ -60,6 +60,16 @@ export default function LeadsTable({ initialLeads }: { initialLeads: LeadWithRef
   const [isLoading, setIsLoading] = useState(false)
   
   const router = useRouter()
+
+  useEffect(() => {
+    try {
+      const storedReferral = window.localStorage.getItem('referralCode') || ''
+      if (storedReferral) {
+        setRegisterForm(prev => ({ ...prev, referralCode: storedReferral }))
+      }
+    } catch (e) {
+    }
+  }, [])
 
   const filteredLeads = leads.filter(lead => 
     lead.name.toLowerCase().includes(filter.toLowerCase()) || 

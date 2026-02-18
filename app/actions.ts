@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import fs from 'fs'
+import path from 'path'
 
 async function sendValidationEmail(email: string, name: string) {
   // Simulación de envío de correo
@@ -14,7 +16,8 @@ async function sendValidationEmail(email: string, name: string) {
 // --- AUTH ---
 
 export async function registerReferrer(formData: FormData) {
-  const name = formData.get('name') as string
+  const rawName = formData.get('name') as string
+  const name = rawName ? rawName.toUpperCase() : ''
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const phone = formData.get('phone') as string
@@ -24,7 +27,7 @@ export async function registerReferrer(formData: FormData) {
     return { error: 'Faltan campos obligatorios' }
   }
 
-  const referralCode = name.substring(0, 3).toUpperCase() + Math.floor(Math.random() * 10000).toString()
+  const referralCode = name.substring(0, 3) + Math.floor(Math.random() * 10000).toString()
 
   try {
     const user = await prisma.user.create({
@@ -35,6 +38,7 @@ export async function registerReferrer(formData: FormData) {
         phone,
         city,
         role: 'REFERRER',
+        status: 'PENDING',
         referralCode,
         termsAccepted: true
       }
@@ -237,21 +241,22 @@ export async function createPartner(formData: FormData) {
 
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return { error: 'No autorizado' }
 
-  const name = formData.get('name') as string
+  const rawName = formData.get('name') as string
+  const name = rawName ? rawName.toUpperCase() : ''
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const phone = formData.get('phone') as string
 
   if (!name || !email || !password) return { error: 'Faltan campos' }
 
-  const referralCode = name.substring(0, 3).toUpperCase() + Math.floor(Math.random() * 10000).toString()
+  const referralCode = name.substring(0, 3) + Math.floor(Math.random() * 10000).toString()
 
   try {
       await prisma.user.create({
           data: {
               name, email, password, phone,
               role: 'REFERRER',
-              status: 'ACTIVE',
+              status: 'PENDING',
               referralCode,
               termsAccepted: true
           }
@@ -287,6 +292,18 @@ export async function updateCommissionStatus(commissionId: string, status: strin
 
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
+  if (status === 'PAID') {
+    const commission = await prisma.commission.findUnique({
+      where: { id: commissionId },
+      include: { referrer: { include: { documents: true } } }
+    })
+    if (!commission) return
+    const required = ['ID_CARD_FRONT', 'ID_CARD_BACK', 'RUT', 'BANK_CERT']
+    const approved = new Set(commission.referrer.documents.filter(d => d.status === 'APPROVED').map(d => d.type))
+    const allApproved = required.every(t => approved.has(t))
+    if (!allApproved) return
+  }
+
   await prisma.commission.update({
     where: { id: commissionId },
     data: { status }
@@ -303,7 +320,24 @@ export async function uploadDocument(formData: FormData): Promise<void> {
   if (!userId) return
 
   const type = formData.get('type') as string
-  const url = formData.get('url') as string // For MVP using URL input
+  const file = formData.get('file') as File | null
+
+  if (!file) return
+
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
+  await fs.promises.mkdir(uploadsDir, { recursive: true })
+
+  const ext = path.extname(file.name) || ''
+  const safeType = type || 'DOC'
+  const filename = `${userId}-${safeType}-${Date.now()}${ext}`
+  const filePath = path.join(uploadsDir, filename)
+
+  await fs.promises.writeFile(filePath, buffer)
+
+  const url = `/uploads/${filename}`
 
   await prisma.document.create({
     data: {
@@ -315,6 +349,8 @@ export async function uploadDocument(formData: FormData): Promise<void> {
   })
 
   revalidatePath('/dashboard')
+  revalidatePath('/admin')
+  revalidatePath('/admin/partners')
 }
 
 export async function updateDocumentStatus(docId: string, status: string, feedback?: string): Promise<void> {
@@ -323,12 +359,40 @@ export async function updateDocumentStatus(docId: string, status: string, feedba
 
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
-  await prisma.document.update({
+  const updated = await prisma.document.update({
     where: { id: docId },
     data: { status, feedback }
   })
 
+  if (updated.userId) {
+    const docs = await prisma.document.findMany({
+      where: { userId: updated.userId, status: 'APPROVED' }
+    })
+    const required = ['ID_CARD_FRONT', 'ID_CARD_BACK', 'RUT', 'BANK_CERT']
+    const approved = new Set(docs.map(d => d.type))
+    const allApproved = required.every(t => approved.has(t))
+    await prisma.user.update({
+      where: { id: updated.userId },
+      data: { status: allApproved ? 'ACTIVE' : 'PENDING' }
+    })
+    revalidatePath('/dashboard')
+  }
+
   revalidatePath('/admin')
+  revalidatePath('/admin/partners')
+}
+
+export async function approveDocument(formData: FormData): Promise<void> {
+  const docId = formData.get('docId') as string
+  if (!docId) return
+  await updateDocumentStatus(docId, 'APPROVED')
+}
+
+export async function rejectDocument(formData: FormData): Promise<void> {
+  const docId = formData.get('docId') as string
+  const reason = formData.get('reason') as string
+  if (!docId || !reason) return
+  await updateDocumentStatus(docId, 'REJECTED', reason)
 }
 
 export async function createDiscount(formData: FormData): Promise<void> {

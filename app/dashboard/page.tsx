@@ -85,37 +85,50 @@ export default async function DashboardPage() {
     { type: 'RUT', label: 'RUT' },
     { type: 'BANK_CERT', label: 'Certificación Bancaria' }
   ]
+  const approvedTypes = new Set(documents.filter(d => d.status === 'APPROVED').map(d => d.type))
+  const docsValidated = requiredDocs.every(d => approvedTypes.has(d.type))
 
   return (
-    <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard de Referidor</h1>
-                <form action={logout}>
-                    <button className="text-red-600 hover:text-red-800 font-medium">Cerrar Sesión</button>
-                </form>
+    <div className="min-h-screen bg-[#F8F9FA]">
+        <header className="bg-transparent">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 px-6 py-5 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400 mb-1">
+                        Panel del Partner
+                      </p>
+                      <h1 className="text-2xl font-bold text-[#2D2D2D]">
+                        Dashboard del Partner
+                      </h1>
+                    </div>
+                    <form action={logout}>
+                      <button className="px-4 py-2 rounded-2xl text-sm font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+                        Cerrar Sesión
+                      </button>
+                    </form>
+                </div>
             </div>
         </header>
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-6">
              {/* Stats */}
              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                 <div className="bg-white p-6 rounded-lg shadow">
-                     <h3 className="text-sm font-medium text-gray-500">Total Leads</h3>
-                     <p className="mt-2 text-3xl font-semibold text-gray-900">{leads.length}</p>
+                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Leads</h3>
+                     <p className="mt-3 text-3xl font-extrabold text-[#2D2D2D]">{leads.length}</p>
                  </div>
-                 <div className="bg-white p-6 rounded-lg shadow">
-                     <h3 className="text-sm font-medium text-gray-500">Leads Convertidos</h3>
-                     <p className="mt-2 text-3xl font-semibold text-gray-900">
+                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Leads Convertidos</h3>
+                     <p className="mt-3 text-3xl font-extrabold text-[#2D2D2D]">
                          {leads.filter(l => ['Separado', 'En proceso de escrituracion', 'Escriturado'].includes(l.status)).length}
                      </p>
                  </div>
-                 <div className="bg-white p-6 rounded-lg shadow">
-                     <h3 className="text-sm font-medium text-gray-500">Comisiones Ganadas</h3>
-                     <p className="mt-2 text-3xl font-semibold text-green-600">${totalCommission.toLocaleString()}</p>
+                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Comisiones Ganadas</h3>
+                     <p className="mt-3 text-3xl font-extrabold text-emerald-600">${totalCommission.toLocaleString()}</p>
                  </div>
-                 <div className="bg-white p-6 rounded-lg shadow">
-                     <h3 className="text-sm font-medium text-gray-500">Saldo Pendiente</h3>
-                     <p className="mt-2 text-3xl font-semibold text-yellow-600">${pendingCommission.toLocaleString()}</p>
+                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Saldo Pendiente</h3>
+                     <p className="mt-3 text-3xl font-extrabold text-amber-600">${pendingCommission.toLocaleString()}</p>
                  </div>
              </div>
 
@@ -133,6 +146,16 @@ export default async function DashboardPage() {
                         </div>
                     </div>
                 </div>
+             )}
+
+             {!docsValidated && (
+               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                 <div className="ml-3">
+                   <p className="text-sm text-yellow-800">
+                     Tu cuenta está en validación. Sube y espera aprobación de tus documentos para habilitar retiros.
+                   </p>
+                 </div>
+               </div>
              )}
 
              {/* Actions */}
@@ -159,7 +182,7 @@ export default async function DashboardPage() {
                  <div className="bg-white p-6 rounded-lg shadow">
                      <h3 className="text-lg font-medium text-gray-900 mb-4">Retirar Fondos</h3>
                      <p className="text-gray-600 mb-4">Saldo disponible para retiro: <span className="font-bold">${pendingCommission.toLocaleString()}</span></p>
-                     {pendingCommission > 0 ? (
+                     {pendingCommission > 0 && docsValidated ? (
                         <a href={withdrawalUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-indigo-600 text-white py-2 px-4 rounded text-center hover:bg-indigo-700 transition-colors">
                             Solicitar Retiro
                         </a>
@@ -195,11 +218,11 @@ export default async function DashboardPage() {
                                         <form action={uploadDocument} className="flex items-center gap-2">
                                             <input type="hidden" name="type" value={doc.type} />
                                             <input 
-                                                type="url" 
-                                                name="url" 
-                                                placeholder="URL del documento" 
+                                                type="file"
+                                                name="file"
+                                                accept="image/*,application/pdf"
                                                 required 
-                                                className="border rounded px-2 py-1 text-sm w-48"
+                                                className="text-sm text-gray-700 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 cursor-pointer"
                                             />
                                             <button className="bg-gray-900 text-white px-3 py-1 rounded text-sm hover:bg-gray-800">
                                                 Subir
