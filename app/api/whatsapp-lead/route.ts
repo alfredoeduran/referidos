@@ -45,10 +45,25 @@ export async function POST(req: NextRequest) {
       }
     })
 
+    if (referrerId) {
+      const digits = phone.replace(/\D/g, '')
+      const safePhone = digits || phone
+
+      await prisma.lead.create({
+        data: {
+          name: `WhatsApp ${safePhone}`,
+          email: `whatsapp+${safePhone}@lead.local`,
+          phone,
+          city: null,
+          projectInterest: loteTitle || loteSlug || null,
+          referrerId
+        }
+      })
+    }
+
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('Error creating whatsapp lead', error)
     return NextResponse.json({ error: 'internal_error' }, { status: 500 })
   }
 }
-
