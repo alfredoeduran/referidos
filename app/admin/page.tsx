@@ -2,25 +2,20 @@ import prisma from '@/lib/prisma'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { 
-  logout, 
-  toggleLeadValidity, 
-  toggleUserStatus, 
-} from '../actions'
 import { getLotes } from '@/lib/wordpress'
-import AdminSidebar from '../components/AdminSidebar'
-import { 
-  Filter, 
-  Users, 
-  Handshake, 
-  Percent, 
-  Wallet, 
+import {
+  Filter,
+  Users,
+  Handshake,
+  Percent,
+  Wallet,
   ChevronRight,
-  User as UserIcon,
-  Search
+  User as UserIcon
 } from 'lucide-react'
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+type AdminSearchParams = { [key: string]: string | string[] | undefined }
+
+export default async function AdminPage({ searchParams }: { searchParams: Promise<AdminSearchParams> }) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value
   
@@ -30,41 +25,68 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   const filters = await searchParams
 
-  const whereClause: any = {}
+  const periodParam = (filters?.period as string) || 'month'
+  const now = new Date()
+
+  let startDate: Date
+  let endDate: Date
+
+  if (periodParam === 'day') {
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+  } else if (periodParam === 'week') {
+    const start = new Date(now)
+    start.setDate(now.getDate() - 6)
+    startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+  } else {
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+  }
+
+  const whereClause: {
+    referrerId?: string
+    status?: string
+    createdAt: {
+      gte: Date
+      lte: Date
+    }
+  } = {
+    createdAt: {
+      gte: startDate,
+      lte: endDate
+    }
+  }
   if (filters?.partnerId) whereClause.referrerId = filters.partnerId as string
   if (filters?.status) whereClause.status = filters.status as string
-  
+
   const lotes = await getLotes()
 
   const leads = await prisma.lead.findMany({
-      where: whereClause,
-      include: { referrer: true, commission: true },
-      orderBy: { createdAt: 'desc' }
+    where: whereClause,
+    include: { referrer: true, commission: true },
+    orderBy: { createdAt: 'desc' }
   })
 
   const referrers = await prisma.user.findMany({
     where: { role: 'REFERRER' },
-    include: { 
-        _count: { select: { leads: true } },
-        commissions: true,
-        leads: true
+    include: {
+      _count: { select: { leads: true } },
+      commissions: true,
+      leads: true
     },
     orderBy: { createdAt: 'desc' }
   })
-  
+
   const discounts = await prisma.discount.findMany({
     orderBy: { createdAt: 'desc' }
   })
 
   const totalLeads = leads.length
-  const totalPartners = referrers.length
+  const totalPartnersPeriod = referrers.filter(r => r.createdAt >= startDate && r.createdAt <= endDate).length
 
-  const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
-
-  const activePartners = referrers.filter(r => 
-    r.leads.some(l => l.createdAt >= startOfMonth && l.createdAt <= endOfMonth)
+  const activePartners = referrers.filter(r =>
+    r.leads.some(l => l.createdAt >= startDate && l.createdAt <= endDate)
   ).length
   const activeLeads = leads.filter(l => ['Contactado', 'Interesado', 'En negociación', 'Separado', 'Cuota inicial'].includes(l.status)).length
   const separations = leads.filter(l => l.status === 'Separado').length
@@ -78,13 +100,67 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const paidAmount = leads
     .filter(l => l.commission?.status === 'PAID')
     .reduce((acc, l) => acc + Number(l.commission?.amount || 0), 0)
+
+  const buildPeriodHref = (period: 'day' | 'week' | 'month') => {
+    const params = new URLSearchParams()
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (key === 'period') return
+      if (typeof value === 'string' && value) {
+        params.set(key, value)
+      }
+    })
+    params.set('period', period)
+    const qs = params.toString()
+    return qs ? `/admin?${qs}` : `/admin?period=${period}`
+  }
+
+  const periodLabel =
+    periodParam === 'day' ? 'Diario' : periodParam === 'week' ? 'Semanal (últimos 7 días)' : 'Mensual'
+
   return (
     <div className="grid grid-cols-12 gap-6">
         {/* Left/Middle Column (KPIs + Partners) */}
         <div className="col-span-12 lg:col-span-9 space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        Periodo: <span className="text-[#2D2D2D]">{periodLabel}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1 bg-orange-50 px-1.5 py-1 rounded-full">
+                        <Link
+                          href={buildPeriodHref('day')}
+                          className={`px-4 py-1.5 text-[11px] font-semibold rounded-full transition-all ${
+                            periodParam === 'day'
+                              ? 'bg-[#F97316] text-white shadow-sm'
+                              : 'bg-white text-[#F97316] border border-[#F97316]/20 hover:bg-[#F97316]/10'
+                          }`}
+                        >
+                          Diario
+                        </Link>
+                        <Link
+                          href={buildPeriodHref('week')}
+                          className={`px-4 py-1.5 text-[11px] font-semibold rounded-full transition-all ${
+                            periodParam === 'week'
+                              ? 'bg-[#F97316] text-white shadow-sm'
+                              : 'bg-white text-[#F97316] border border-[#F97316]/20 hover:bg-[#F97316]/10'
+                          }`}
+                        >
+                          Semanal
+                        </Link>
+                        <Link
+                          href={buildPeriodHref('month')}
+                          className={`px-4 py-1.5 text-[11px] font-semibold rounded-full transition-all ${
+                            periodParam === 'month'
+                              ? 'bg-[#F97316] text-white shadow-sm'
+                              : 'bg-white text-[#F97316] border border-[#F97316]/20 hover:bg-[#F97316]/10'
+                          }`}
+                        >
+                          Mensual
+                        </Link>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         <StatCard icon={Filter} label="Total Leads" value={totalLeads} />
-                        <StatCard icon={Users} label="Partners Registrados" value={totalPartners} />
+                        <StatCard icon={Users} label="Partners Registrados" value={totalPartnersPeriod} />
                         <StatCard icon={Handshake} label="Partners Activos" value={activePartners} />
                         <StatCard icon={Percent} label="Tasa Conversión (%)" value={conversionRate} />
                     </div>
@@ -150,7 +226,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     )
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: any, label: string, value: number }) {
+type StatCardProps = {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: number
+}
+
+function StatCard({ icon: Icon, label, value }: StatCardProps) {
   return (
     <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center">
         <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-[#F97316] mb-4">
@@ -162,7 +244,13 @@ function StatCard({ icon: Icon, label, value }: { icon: any, label: string, valu
   )
 }
 
-function FinancialCard({ icon: Icon, label, value }: { icon: any, label: string, value: number }) {
+type FinancialCardProps = {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: number
+}
+
+function FinancialCard({ icon: Icon, label, value }: FinancialCardProps) {
   return (
     <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
         <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-[#F97316] mb-4">
@@ -174,6 +262,6 @@ function FinancialCard({ icon: Icon, label, value }: { icon: any, label: string,
   )
 }
 
-function LegendItem({ color, label }: { color: string, label: string }) {
+function LegendItem() {
   return null
 }

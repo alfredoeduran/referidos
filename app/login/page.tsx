@@ -10,17 +10,17 @@ export default async function LoginPage({
   const { error } = await searchParams
   
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-[#1D293F] via-[#2D948A] to-[#FFFFFF] flex flex-col">
       <Header />
       
       <div className="flex-1 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
             Inicia sesión en tu cuenta
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-100">
             ¿No tienes cuenta?{' '}
-            <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link href="/register" className="font-medium text-[#F47C20] hover:text-white">
               Regístrate aquí
             </Link>
           </p>
@@ -44,7 +44,7 @@ export default async function LoginPage({
             </div>
           )}
 
-          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
+          <div className="bg-white/95 backdrop-blur py-8 px-4 shadow-lg sm:rounded-2xl sm:px-10 border border-[#2D948A]/20">
             <LoginForm />
           </div>
         </div>

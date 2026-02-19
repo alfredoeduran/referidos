@@ -6,9 +6,9 @@ export default async function Home() {
   const featuredLote = lotes.length > 0 ? lotes[0] : null
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-[#FFFFFF]">
       {/* Navbar */}
-      <nav className="flex items-center justify-between p-6 lg:px-8 border-b border-gray-100" aria-label="Global">
+      <nav className="flex items-center justify-between p-6 lg:px-8 border-b border-[#1D293F]/10 bg-[#1D293F] text-white" aria-label="Global">
         <div className="flex lg:flex-1">
           <Link href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">Goods & Co</span>
@@ -20,36 +20,36 @@ export default async function Home() {
           </Link>
         </div>
         <div className="flex gap-x-12">
-          <Link href="/lotes" className="text-sm font-semibold leading-6 text-gray-900">Proyectos</Link>
-          <Link href="/login" className="text-sm font-semibold leading-6 text-gray-900">Soy Referidor</Link>
+          <Link href="/lotes" className="text-sm font-semibold leading-6 text-white hover:text-[#F47C20] transition-colors">Proyectos</Link>
+          <Link href="/login" className="text-sm font-semibold leading-6 text-white hover:text-[#F47C20] transition-colors">Soy Partner</Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <div className="relative isolate overflow-hidden bg-gradient-to-b from-indigo-100/20 pt-14">
+      <div className="relative isolate overflow-hidden bg-gradient-to-b from-[#1D293F] via-[#2D948A] to-[#FFFFFF] pt-14">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56 text-center">
             <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-              <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                ¡Nuevo sistema de referidos activo! <Link href="/register" className="font-semibold text-indigo-600"><span className="absolute inset-0" aria-hidden="true" />Registrarme <span aria-hidden="true">&rarr;</span></Link>
+              <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-[#1D293F] bg-white/80 ring-1 ring-white/40">
+                ¡Nuevo sistema de referidos activo! <Link href="/register" className="font-semibold text-[#2D948A]"><span className="absolute inset-0" aria-hidden="true" />Registrarme <span aria-hidden="true">&rarr;</span></Link>
               </div>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
               Invierte en Tierra, <br/>
-              <span className="text-indigo-600">Gana por Referir</span>
+              <span className="text-[#F47C20]">Gana por Referir</span>
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
+            <p className="mt-6 text-lg leading-8 text-gray-100">
               Accede a los mejores lotes campestres del país con planes de financiación exclusivos. 
               Únete a nuestra red de partners y genera comisiones por cada venta referida.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
                 href="/lotes"
-                className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                className="rounded-md bg-[#2D948A] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1f6961] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2D948A]"
               >
                 Ver Lotes Disponibles
               </Link>
-              <Link href="/register" className="text-sm font-semibold leading-6 text-gray-900">
+              <Link href="/register" className="text-sm font-semibold leading-6 text-white hover:text-[#F47C20]">
                 Quiero ser Partner <span aria-hidden="true">→</span>
               </Link>
             </div>
@@ -63,11 +63,11 @@ export default async function Home() {
       </div>
 
       {/* Feature Section */}
-      <div className="bg-white py-24 sm:py-32">
+      <div className="bg-[#FFFFFF] py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-indigo-600">Sistema de Partners</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h2 className="text-base font-semibold leading-7 text-[#2D948A]">Sistema de Partners</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-[#1D293F] sm:text-4xl">
               ¿Cómo funciona?
             </p>
             <p className="mt-6 text-lg leading-8 text-gray-600">
@@ -77,8 +77,8 @@ export default async function Home() {
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
             <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3 lg:gap-y-16">
               <div className="relative pl-16">
-                <dt className="text-base font-semibold leading-7 text-gray-900">
-                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                <dt className="text-base font-semibold leading-7 text-[#1D293F]">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[#2D948A]">
                     <span className="text-white font-bold">1</span>
                   </div>
                   Regístrate
@@ -88,8 +88,8 @@ export default async function Home() {
                 </dd>
               </div>
               <div className="relative pl-16">
-                <dt className="text-base font-semibold leading-7 text-gray-900">
-                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                <dt className="text-base font-semibold leading-7 text-[#1D293F]">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[#2D948A]">
                      <span className="text-white font-bold">2</span>
                   </div>
                   Comparte
@@ -99,8 +99,8 @@ export default async function Home() {
                 </dd>
               </div>
               <div className="relative pl-16">
-                <dt className="text-base font-semibold leading-7 text-gray-900">
-                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
+                <dt className="text-base font-semibold leading-7 text-[#1D293F]">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-[#2D948A]">
                      <span className="text-white font-bold">3</span>
                   </div>
                   Gana
@@ -116,15 +116,15 @@ export default async function Home() {
 
       {/* Featured Lotes Preview */}
       {featuredLote && (
-        <div className="bg-gray-900 py-24 sm:py-32">
+        <div className="bg-[#1D293F] py-24 sm:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl lg:text-center mb-16">
-                    <h2 className="text-base font-semibold leading-7 text-indigo-400">Oportunidades</h2>
+                    <h2 className="text-base font-semibold leading-7 text-[#2D948A]">Oportunidades</h2>
                     <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
                     Proyectos Destacados
                     </p>
                 </div>
-                <div className="relative isolate overflow-hidden bg-gray-800 px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
+                <div className="relative isolate overflow-hidden bg-[#1D293F] px-6 pt-16 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0 border border-white/10">
                     <div className="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                         {featuredLote.title.rendered}
