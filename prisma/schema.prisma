@@ -26,6 +26,7 @@ model User {
   documents     Document[]
   commissions   Commission[]
   clicks        Click[]
+  whatsappLeads WhatsappLead[]
 }
 
 model Lead {
