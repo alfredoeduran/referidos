@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma'
+import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { 
@@ -81,22 +82,23 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     <div className="grid grid-cols-12 gap-6">
         {/* Left/Middle Column (KPIs + Partners) */}
         <div className="col-span-12 lg:col-span-9 space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         <StatCard icon={Filter} label="Total Leads" value={totalLeads} />
                         <StatCard icon={Users} label="Partners Registrados" value={totalPartners} />
                         <StatCard icon={Handshake} label="Partners Activos" value={activePartners} />
                         <StatCard icon={Percent} label="Tasa Conversión (%)" value={conversionRate} />
-                        <StatCard icon={Wallet} label="Comisiones Pendientes" value={pendingAmount} />
-                        <StatCard icon={Wallet} label="Comisiones Pagadas" value={paidAmount} />
                     </div>
 
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 md:p-8">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                             <h2 className="text-xl font-bold text-[#2D2D2D]">Partners Registrados</h2>
-                            <button className="w-full sm:w-auto bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-2 rounded-full flex items-center justify-center gap-2 text-sm font-bold transition-all shadow-lg shadow-orange-200">
-                                <span>Registrar Lead</span>
+                            <Link
+                              href="/admin/partners"
+                              className="w-full sm:w-auto bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-2 rounded-full flex items-center justify-center gap-2 text-sm font-bold transition-all shadow-lg shadow-orange-200"
+                            >
+                                <span>Ver todos los partners</span>
                                 <Filter className="w-4 h-4" />
-                            </button>
+                            </Link>
                         </div>
 
                         <div className="space-y-4">
@@ -143,27 +145,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             label="Comisiones Pagadas" 
             value={paidAmount} 
           />
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-            <h2 className="text-sm font-bold text-[#2D2D2D] mb-6">Panorama General</h2>
-            <div className="relative aspect-square flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" stroke="#FEE2E2" strokeWidth="12" fill="transparent" />
-                <circle cx="50" cy="50" r="40" stroke="#F97316" strokeWidth="12" fill="transparent" 
-                  strokeDasharray={`${(activeLeads/totalLeads)*251.2} 251.2`} 
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-2xl font-bold text-[#2D2D2D]">{Math.round((activeLeads/totalLeads)*100) || 0}%</span>
-                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Leads Activos</span>
-              </div>
-            </div>
-            <div className="mt-8 space-y-2">
-              <LegendItem color="bg-[#F97316]" label="Leads Activos" />
-              <LegendItem color="bg-[#FEE2E2]" label="Leads Inactivos" />
-              <LegendItem color="bg-[#FED7AA]" label="Comisiones Pagadas" />
-              <LegendItem color="bg-[#FFEDD5]" label="Comisiones Pendientes" />
-            </div>
-          </div>
         </div>
             </div>
     )
@@ -194,10 +175,5 @@ function FinancialCard({ icon: Icon, label, value }: { icon: any, label: string,
 }
 
 function LegendItem({ color, label }: { color: string, label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-        <div className={`w-3 h-3 rounded-sm ${color}`} />
-        <span className="text-[10px] text-gray-500 font-medium">{label}</span>
-    </div>
-  )
+  return null
 }
