@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { getLotes } from '@/lib/wordpress'
+import heroBg from '@/public/uploads/heroreferal.png'
+import destacadosBg from '@/public/uploads/proyectosdestacados.png'
 
 export default async function Home() {
   const lotes = await getLotes()
@@ -29,9 +31,10 @@ export default async function Home() {
       <div
         className="relative isolate overflow-hidden pt-14"
         style={{
-          backgroundImage: 'url(/uploads/heroreferal.png)',
+          backgroundImage: `url(${heroBg.src})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       >
         <div className="absolute inset-0 bg-black/60"></div>
@@ -54,7 +57,7 @@ export default async function Home() {
             <div className="mt-10 flex items-center justify-center gap-x-4">
               <Link
                 href="/lotes"
-                className="rounded-full bg-[#2D948A] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#1f6961] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2D948A]"
+                className="rounded-full bg-[#F47C20] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#d86816] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F47C20]"
               >
                 Ver Lotes Disponibles
               </Link>
@@ -114,9 +117,10 @@ export default async function Home() {
                 <div
                   className="relative isolate overflow-hidden px-6 py-16 shadow-2xl sm:rounded-3xl sm:px-16 lg:px-24 border border-white/10"
                   style={{
-                    backgroundImage: 'url(/uploads/proyectosdestacados.png)',
+                    backgroundImage: `url(${destacadosBg.src})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
                   }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Header from '@/app/components/Header'
 import LoginForm from '@/app/components/LoginForm'
 import { UserRound } from 'lucide-react'
+import heroBg from '@/public/uploads/heroreferal.png'
 
 export default async function LoginPage({
   searchParams,
@@ -14,7 +15,7 @@ export default async function LoginPage({
     <div
       className="min-h-screen flex flex-col"
       style={{
-        backgroundImage: 'url(/uploads/heroreferal.png)',
+        backgroundImage: `url(${heroBg.src})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
