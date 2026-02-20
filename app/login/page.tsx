@@ -2,7 +2,7 @@ import Link from 'next/link'
 import Header from '@/app/components/Header'
 import LoginForm from '@/app/components/LoginForm'
 import { UserRound } from 'lucide-react'
-import heroBg from '@/public/uploads/heroreferal.png'
+import Image from 'next/image'
 
 export default async function LoginPage({
   searchParams,
@@ -12,15 +12,15 @@ export default async function LoginPage({
   const { error } = await searchParams
   
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{
-        backgroundImage: `url(${heroBg.src})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
+    <div className="min-h-screen flex flex-col relative">
+      <Image
+        src="/uploads/heroreferal.png"
+        alt="Login background"
+        fill
+        priority
+        className="object-cover"
+        sizes="100vw"
+      />
       <div className="absolute inset-0 bg-black/30" />
       <Header variant="onImage" />
       <div className="relative flex-1 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

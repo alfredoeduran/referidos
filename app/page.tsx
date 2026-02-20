@@ -1,7 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { getLotes } from '@/lib/wordpress'
-import heroBg from '@/public/uploads/heroreferal.png'
-import destacadosBg from '@/public/uploads/proyectosdestacados.png'
 
 export default async function Home() {
   const lotes = await getLotes()
@@ -28,15 +27,15 @@ export default async function Home() {
       </nav>
 
       {/* Hero Section */}
-      <div
-        className="relative isolate overflow-hidden pt-14"
-        style={{
-          backgroundImage: `url(${heroBg.src})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
+      <div className="relative isolate overflow-hidden pt-14">
+        <Image
+          src="/uploads/heroreferal.png"
+          alt="Hero background"
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-black/60"></div>
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent"></div>
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
@@ -114,15 +113,14 @@ export default async function Home() {
                     </div>
                     <Link href="/lotes" className="rounded-full bg-[#F47C20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#d86816]">Ver todos los proyectos</Link>
                 </div>
-                <div
-                  className="relative isolate overflow-hidden px-6 py-16 shadow-2xl sm:rounded-3xl sm:px-16 lg:px-24 border border-white/10"
-                  style={{
-                    backgroundImage: `url(${destacadosBg.src})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                  }}
-                >
+                <div className="relative isolate overflow-hidden px-6 py-16 shadow-2xl sm:rounded-3xl sm:px-16 lg:px-24 border border-white/10">
+                    <Image
+                      src="/uploads/proyectosdestacados.png"
+                      alt="Proyecto destacado"
+                      fill
+                      className="object-cover"
+                      sizes="100vw"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
                     <div className="relative mx-auto max-w-lg lg:mx-0 lg:py-20 text-left">
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
