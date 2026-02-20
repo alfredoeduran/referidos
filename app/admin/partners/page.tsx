@@ -1,12 +1,17 @@
 import prisma from '@/lib/prisma'
 import PartnersTable from '@/app/components/PartnersTable'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 type SearchParams = { [key: string]: string | string[] | undefined }
 
 export default async function PartnersPage({ searchParams }: { searchParams: SearchParams }) {
   const cookieStore = await cookies()
   const role = cookieStore.get('role')?.value || ''
+
+  if (!['ADMIN', 'SUPERADMIN', 'MANAGER'].includes(role)) {
+    redirect('/login')
+  }
 
   const from = searchParams.from as string | undefined
   const to = searchParams.to as string | undefined

@@ -1,23 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { registerReferrer } from '../actions'
 
+function generateCaptcha() {
+  const n1 = Math.floor(Math.random() * 10) + 1
+  const n2 = Math.floor(Math.random() * 10) + 1
+  return { q: `${n1} + ${n2}`, a: n1 + n2 }
+}
+
 export default function RegisterForm() {
-  const [captcha, setCaptcha] = useState({ q: '', a: 0 })
+  const [captcha, setCaptcha] = useState(generateCaptcha)
   const [input, setInput] = useState('')
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const n1 = Math.floor(Math.random() * 10) + 1
-    const n2 = Math.floor(Math.random() * 10) + 1
-    setCaptcha({ q: `${n1} + ${n2}`, a: n1 + n2 })
-  }, [])
 
   async function handleSubmit(formData: FormData) {
     setError('')
     if (parseInt(input) !== captcha.a) {
       setError('Captcha incorrecto. Por favor resuelve la suma.')
+      setCaptcha(generateCaptcha())
       return
     }
     
@@ -29,18 +30,35 @@ export default function RegisterForm() {
 
   return (
     <form className="space-y-6" action={handleSubmit}>
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-          Nombre Completo
-        </label>
-        <div className="mt-1">
-          <input
-            id="name"
-            name="name"
-            type="text"
-            required
-            className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
-          />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Nombre
+          </label>
+          <div className="mt-1">
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+            Apellido
+          </label>
+          <div className="mt-1">
+            <input
+              id="lastName"
+              name="lastName"
+              type="text"
+              required
+              className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
+            />
+          </div>
         </div>
       </div>
 

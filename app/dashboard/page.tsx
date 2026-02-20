@@ -93,13 +93,18 @@ export default async function DashboardPage() {
         <header className="bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 px-6 py-5 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400 mb-1">
-                        Panel del Partner
+                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gray-400 mb-1">
+                          Panel del Partner
+                        </p>
+                        <h1 className="text-2xl font-bold text-[#2D2D2D]">
+                          Dashboard del Partner
+                        </h1>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1 sm:mt-0">
+                        Bienvenido, <span className="font-semibold uppercase">{user.name}</span>
                       </p>
-                      <h1 className="text-2xl font-bold text-[#2D2D2D]">
-                        Dashboard del Partner
-                      </h1>
                     </div>
                     <form action={logout}>
                       <button className="px-4 py-2 rounded-2xl text-sm font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
@@ -255,7 +260,7 @@ export default async function DashboardPage() {
                         <tbody className="bg-white divide-y divide-gray-200">
                             {leads.map((lead) => (
                                 <tr key={lead.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{lead.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 uppercase">{lead.name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.projectInterest || 'N/A'}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <StatusBadge status={lead.status} />

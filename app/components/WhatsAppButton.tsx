@@ -12,10 +12,7 @@ export default function WhatsAppButton({
   loteTitle: string
   loteSlug: string 
 }) {
-  const [referralCode] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null
-    return localStorage.getItem('referralCode')
-  })
+  const [referralCode, setReferralCode] = useState<string | null>(null)
   const [showPhoneModal, setShowPhoneModal] = useState(false)
   const [visitorPhone, setVisitorPhone] = useState(() => {
     if (typeof window === 'undefined') return ''
@@ -24,7 +21,10 @@ export default function WhatsAppButton({
   const [error, setError] = useState('')
 
   useEffect(() => {
-    // noop: mantenemos el efecto para posibles futuras suscripciones
+    const stored = localStorage.getItem('referralCode')
+    if (stored) {
+      setReferralCode(stored)
+    }
   }, [])
 
   const phoneNumber = '573216583860'

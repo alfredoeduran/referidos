@@ -18,15 +18,23 @@ export async function POST(req: NextRequest) {
       referralCode?: string | null
     } = body
 
+    console.log('whatsapp-lead:in', {
+      hasPhone: !!phone,
+      hasReferral: !!referralCode,
+      loteId,
+      loteSlug
+    })
+
     if (!phone) {
       return NextResponse.json({ error: 'phone required' }, { status: 400 })
     }
 
     let referrerId: string | undefined
+    const effectiveReferralCode = referralCode || req.cookies.get('referralCode')?.value || null
 
-    if (referralCode) {
+    if (effectiveReferralCode) {
       const referrer = await prisma.user.findUnique({
-        where: { referralCode }
+        where: { referralCode: effectiveReferralCode }
       })
 
       if (referrer) {
@@ -34,13 +42,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    console.log('whatsapp-lead:ref', { hasReferrer: !!referrerId })
+
     await prisma.whatsappLead.create({
       data: {
         phone,
         loteId: typeof loteId === 'number' ? loteId : null,
         loteTitle: loteTitle || null,
         loteSlug: loteSlug || null,
-        referralCode: referralCode || null,
+        referralCode: effectiveReferralCode,
         referrerId: referrerId || null
       }
     })
@@ -59,6 +69,7 @@ export async function POST(req: NextRequest) {
           referrerId
         }
       })
+      console.log('whatsapp-lead:lead', { createdLead: true })
     }
 
     return NextResponse.json({ ok: true })

@@ -3,11 +3,18 @@ import LeadsTable from '@/app/components/LeadsTable'
 
 type SearchParams = { [key: string]: string | string[] | undefined }
 
+type WhereClause = {
+  createdAt?: {
+    gte?: Date
+    lte?: Date
+  }
+}
+
 export default async function LeadsPage({ searchParams }: { searchParams: SearchParams }) {
   const from = searchParams.from as string | undefined
   const to = searchParams.to as string | undefined
 
-  const where: any = {}
+  const where: WhereClause = {}
   if (from || to) {
     where.createdAt = {}
     if (from) {
@@ -29,6 +36,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
       createdAt: 'desc'
     }
   })
+
+  const safeLeads = leads.map(lead => ({
+    ...lead,
+    loteValue: lead.loteValue ? Number(lead.loteValue) : null
+  }))
 
   return (
     <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8">
@@ -56,7 +68,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Search
           </button>
         </form>
       </div>
-      <LeadsTable initialLeads={leads} />
+      <LeadsTable initialLeads={safeLeads} />
     </div>
   )
 }

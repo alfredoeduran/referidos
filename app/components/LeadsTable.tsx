@@ -7,8 +7,9 @@ import { updateLeadStatus, toggleLeadValidity, createLead } from '@/app/actions'
 import { useRouter } from 'next/navigation'
 import StatusBadge from './StatusBadge'
 
-type LeadWithReferrer = Lead & {
+type LeadWithReferrer = Omit<Lead, 'loteValue'> & {
   referrer: User
+  loteValue: number | null
 }
 
 const STATUS_OPTIONS = [
@@ -96,7 +97,7 @@ export default function LeadsTable({ initialLeads }: { initialLeads: LeadWithRef
       
       setLeads(prev => prev.map(l => 
         l.id === selectedLead.id 
-          ? { ...l, status: newStatus, loteValue: newStatus === 'Separado' ? Number(loteValue) : l.loteValue } as any 
+          ? { ...l, status: newStatus, loteValue: newStatus === 'Separado' ? Number(loteValue) : l.loteValue }
           : l
       ))
       
@@ -211,7 +212,7 @@ export default function LeadsTable({ initialLeads }: { initialLeads: LeadWithRef
                     {/* Lead Info */}
                     <td className="py-5 px-6">
                       <div className="flex flex-col">
-                        <span className="font-bold text-gray-900 text-sm">{lead.name}</span>
+                        <span className="font-bold text-gray-900 text-sm uppercase">{lead.name}</span>
                         <span className="text-xs text-gray-500 font-medium">{lead.phone}</span>
                       </div>
                     </td>
@@ -219,7 +220,7 @@ export default function LeadsTable({ initialLeads }: { initialLeads: LeadWithRef
                     {/* Partner Info */}
                     <td className="py-5 px-6">
                       <div className="flex flex-col">
-                        <span className="font-bold text-gray-900 text-sm">{lead.referrer.name}</span>
+                        <span className="font-bold text-gray-900 text-sm uppercase">{lead.referrer.name}</span>
                         <span className="text-xs text-gray-500 font-medium uppercase">{lead.referrer.referralCode}</span>
                       </div>
                     </td>

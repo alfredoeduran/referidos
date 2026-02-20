@@ -185,7 +185,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                                             <UserIcon className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-[#2D2D2D] capitalize break-all">{user.name.toLowerCase()}</h3>
+                                            <h3 className="font-bold text-[#2D2D2D] break-all uppercase">{user.name}</h3>
                                             <p className="text-xs text-gray-400">Registrado: {user.createdAt.toLocaleDateString('es-ES')}</p>
                                         </div>
                                     </div>

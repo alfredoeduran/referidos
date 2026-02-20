@@ -16,8 +16,10 @@ async function sendValidationEmail(email: string, name: string) {
 // --- AUTH ---
 
 export async function registerReferrer(formData: FormData) {
-  const rawName = formData.get('name') as string
-  const name = rawName ? rawName.toUpperCase() : ''
+  const rawFirstName = formData.get('name') as string
+  const rawLastName = formData.get('lastName') as string
+  const fullNameRaw = [rawFirstName, rawLastName].filter(Boolean).join(' ')
+  const name = fullNameRaw ? fullNameRaw.toUpperCase() : ''
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const phone = formData.get('phone') as string
@@ -94,7 +96,8 @@ export async function logout() {
 // --- PUBLIC LEAD ---
 
 export async function createLead(formData: FormData) {
-  const name = formData.get('name') as string
+  const rawName = formData.get('name') as string
+  const name = rawName ? rawName.toUpperCase() : ''
   const email = formData.get('email') as string
   const phone = formData.get('phone') as string
   const city = formData.get('city') as string
@@ -177,7 +180,7 @@ export async function updateLeadStatus(leadId: string, status: string, loteValue
   
   if (!['ADMIN', 'SUPERADMIN'].includes(role || '')) return
 
-  const data: any = { status }
+  const data: { status: string; loteValue?: number } = { status }
   if (loteValue !== undefined) {
     data.loteValue = loteValue
   }
