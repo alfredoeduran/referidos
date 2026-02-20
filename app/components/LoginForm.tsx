@@ -41,7 +41,7 @@ export default function LoginForm() {
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-semibold text-[#F47C20]">
           Correo electrónico
         </label>
         <div className="mt-1">
@@ -51,13 +51,13 @@ export default function LoginForm() {
             type="email"
             autoComplete="email"
             required
-            className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white transition-colors"
+            className="block w-full appearance-none rounded-lg border border-transparent bg-gray-100/80 px-3 py-2 placeholder-gray-400 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#F47C20] sm:text-sm text-gray-900 transition-colors"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-semibold text-[#F47C20]">
           Contraseña
         </label>
         <div className="mt-1">
@@ -67,7 +67,7 @@ export default function LoginForm() {
             type="password"
             autoComplete="current-password"
             required
-            className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white transition-colors"
+            className="block w-full appearance-none rounded-lg border border-transparent bg-gray-100/80 px-3 py-2 placeholder-gray-400 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#F47C20] sm:text-sm text-gray-900 transition-colors"
           />
         </div>
       </div>
@@ -76,7 +76,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+          className="flex w-full justify-center rounded-full bg-[#F47C20] py-3 px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#d86816] focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
         >
           {isPending ? (
             <>

@@ -64,9 +64,6 @@ export default async function DashboardPage() {
     .filter(l => l.loteValue && Number(l.loteValue) > 0 && !l.commission)
     .reduce((acc, l) => acc + (Number(l.loteValue) * 0.015), 0)
 
-  const withdrawalMessage = `Hola, quisiera solicitar el retiro de mis comisiones acumuladas por valor de $${pendingCommission.toLocaleString()}`
-  const withdrawalUrl = `https://wa.me/?text=${encodeURIComponent(withdrawalMessage)}`
-
   const discounts = await prisma.discount.findMany({ where: { isActive: true } })
   
   // Dynamic Base URL detection
@@ -137,29 +134,11 @@ export default async function DashboardPage() {
                  </div>
              </div>
 
-             {/* Provisional Balance Card */}
-             {provisionalCommission > 0 && (
-                <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            {/* Icon */}
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm text-blue-700">
-                                Tienes <span className="font-bold">${provisionalCommission.toLocaleString()}</span> en comisiones provisionales por leads separados (aún no validados por admin).
-                            </p>
-                        </div>
-                    </div>
-                </div>
-             )}
-
              {!docsValidated && (
-               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                 <div className="ml-3">
-                   <p className="text-sm text-yellow-800">
-                     Tu cuenta está en validación. Sube y espera aprobación de tus documentos para habilitar retiros.
-                   </p>
-                 </div>
+               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                 <p className="text-sm text-yellow-800">
+                   Tu cuenta está en validación. Ve a <a href="/dashboard/documentacion" className="font-semibold underline">Documentación</a> para subir y revisar tus archivos.
+                 </p>
                </div>
              )}
 
@@ -183,111 +162,25 @@ export default async function DashboardPage() {
                      </div>
                  </div>
 
-                 {/* Withdrawal */}
                  <div className="bg-white p-6 rounded-lg shadow">
-                     <h3 className="text-lg font-medium text-gray-900 mb-4">Retirar Fondos</h3>
-                     <p className="text-gray-600 mb-4">Saldo disponible para retiro: <span className="font-bold">${pendingCommission.toLocaleString()}</span></p>
-                     {pendingCommission > 0 && docsValidated ? (
-                        <a href={withdrawalUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-indigo-600 text-white py-2 px-4 rounded text-center hover:bg-indigo-700 transition-colors">
-                            Solicitar Retiro
-                        </a>
-                     ) : (
-                        <button disabled className="block w-full bg-gray-300 text-gray-500 py-2 px-4 rounded text-center cursor-not-allowed">
-                            Solicitar Retiro
-                        </button>
-                     )}
+                   <h3 className="text-lg font-medium text-gray-900 mb-2">Tus Fondos</h3>
+                   <p className="text-gray-600 mb-4">Saldo pendiente: <span className="font-bold">${pendingCommission.toLocaleString()}</span></p>
+                   <a href="/dashboard/fondos" className="inline-flex rounded-full bg-[#F47C20] px-5 py-3 text-sm font-semibold text-white shadow hover:bg-[#d86816]">
+                     Gestionar retiros
+                   </a>
                  </div>
              </div>
 
-            {/* Document Upload Section */}
-            <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Documentación Requerida</h3>
-                <div className="space-y-4">
-                    {requiredDocs.map((doc) => {
-                        const existingDoc = documents.find(d => d.type === doc.type)
-                        return (
-                            <div key={doc.type} className="border rounded p-4 flex justify-between items-center">
-                                <div>
-                                    <h4 className="font-medium text-gray-900">{doc.label}</h4>
-                                    {existingDoc ? (
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <StatusBadge status={existingDoc.status} />
-                                            {existingDoc.feedback && <span className="text-sm text-red-500">{existingDoc.feedback}</span>}
-                                        </div>
-                                    ) : (
-                                        <span className="text-sm text-gray-500">Pendiente de carga</span>
-                                    )}
-                                </div>
-                                <div>
-                                    {(!existingDoc || existingDoc.status === 'REJECTED') && (
-                                        <form action={uploadDocument} className="flex items-center gap-2">
-                                            <input type="hidden" name="type" value={doc.type} />
-                                            <input 
-                                                type="file"
-                                                name="file"
-                                                accept="image/*,application/pdf"
-                                                required 
-                                                className="text-sm text-gray-700 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 cursor-pointer"
-                                            />
-                                            <button className="bg-gray-900 text-white px-3 py-1 rounded text-sm hover:bg-gray-800">
-                                                Subir
-                                            </button>
-                                        </form>
-                                    )}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </div>
+            {/* Acceso a Referidos */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-[#2D2D2D]">Mis Referidos</h3>
+                <p className="text-sm text-gray-500">Consulta el estado de tus leads</p>
+              </div>
+              <a href="/dashboard/referidos" className="inline-flex rounded-full bg-[#F47C20] px-5 py-3 text-sm font-semibold text-white shadow hover:bg-[#d86816]">
+                Ver referidos
+              </a>
             </div>
-
-             {/* Leads List */}
-             <div className="bg-white shadow rounded-lg overflow-hidden">
-                 <div className="px-6 py-4 border-b border-gray-200">
-                     <h3 className="text-lg font-medium text-gray-900">Mis Referidos</h3>
-                 </div>
-                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proyecto</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comisión</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {leads.map((lead) => (
-                                <tr key={lead.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 uppercase">{lead.name}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.projectInterest || 'N/A'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <StatusBadge status={lead.status} />
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {lead.commission ? (
-                                            <span className="text-green-600 font-medium">${Number(lead.commission.amount).toLocaleString()}</span>
-                                        ) : (
-                                            <span className="text-gray-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(lead.createdAt).toLocaleDateString()}
-                                    </td>
-                                </tr>
-                            ))}
-                            {leads.length === 0 && (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                                        Aún no tienes referidos. ¡Comparte tu enlace!
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                 </div>
-             </div>
              
              {/* Discounts Section */}
              <div className="bg-white shadow rounded-lg p-6">
