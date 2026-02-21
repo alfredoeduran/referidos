@@ -39,19 +39,14 @@ export default async function Home() {
         <div className="absolute inset-0 bg-black/30"></div>
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/30 to-transparent"></div>
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl py-28 sm:py-44 lg:py-56 text-center">
-            <div className="hidden sm:mb-8 sm:flex sm:justify-center">
-              <Link href="/register" className="relative rounded-full px-5 py-2 text-sm font-semibold leading-6 text-white bg-[#F47C20] shadow hover:bg-[#d86816]">
-                Registrarme
-              </Link>
-            </div>
+          <div className="mx-auto max-w-3xl py-20 sm:py-32 lg:py-44 text-center">
             <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
-              INVIERTE EN TIERRA
+              MONETIZA TU RED DE CONTACTOS
               <br />
-              <span className="text-[#F47C20]">GANA POR REFERIR</span>
+              <span className="text-[#F47C20]">Vende tierra. Gana comisiones reales.</span>
             </h1>
             <p className="mt-6 text-lg leading-8 text-white/90">
-              Accede a los mejores lotes campestres del país con planes de financiación exclusivos. Únete a nuestra red de partners y genera comisiones por cada venta referida.
+              Accede a proyectos en zonas de alta valorización y genera ingresos por cada venta referida.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-4">
               <Link
@@ -59,9 +54,6 @@ export default async function Home() {
                 className="rounded-full bg-[#F47C20] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#d86816] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F47C20]"
               >
                 Ver Lotes Disponibles
-              </Link>
-              <Link href="/register" className="rounded-full border border-white/30 px-5 py-3 text-sm font-semibold leading-6 text-white hover:text-[#F47C20] hover:border-[#F47C20]">
-                Quiero ser Partner →
               </Link>
             </div>
           </div>
