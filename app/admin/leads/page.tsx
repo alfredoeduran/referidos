@@ -1,6 +1,8 @@
 import prisma from '@/lib/prisma'
 import LeadsTable from '@/app/components/LeadsTable'
 
+export const dynamic = 'force-dynamic'
+
 type SearchParams = { [key: string]: string | string[] | undefined }
 
 type WhereClause = {
