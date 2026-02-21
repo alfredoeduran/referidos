@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
         where: { role: { in: ['ADMIN', 'SUPERADMIN'] } },
         orderBy: { createdAt: 'asc' }
       })
-      assignedReferrerId = adminUser?.id || null
+      assignedReferrerId = adminUser?.id
       if (!assignedReferrerId) {
         const envAdminId = process.env.DEFAULT_ADMIN_ID
         if (envAdminId) {
