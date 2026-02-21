@@ -4,7 +4,7 @@ import { getLotes } from '@/lib/wordpress'
 
 export default async function Home() {
   const lotes = await getLotes()
-  const featuredLote = lotes.length > 0 ? lotes[0] : null
+  const featuredLotes = lotes.slice(0, 3)
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFFFF]">
@@ -108,7 +108,7 @@ export default async function Home() {
       </div>
 
       {/* Featured Lotes Preview */}
-      {featuredLote && (
+      {featuredLotes.length > 0 && (
         <div className="bg-[#FFFFFF] py-24 sm:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mb-8 flex items-end justify-between">
@@ -121,31 +121,36 @@ export default async function Home() {
                       <Link href="/register" className="rounded-full border border-[#F47C20] px-4 py-2 text-sm font-semibold text-[#F47C20] hover:bg-[#FFF3EB]">Quiero ser Partner</Link>
                     </div>
                 </div>
-                <div className="relative isolate overflow-hidden px-6 py-16 shadow-2xl sm:rounded-3xl sm:px-16 lg:px-24 border border-white/10">
-                    <Image
-                      src="/uploads/proyectosdestacados.png"
-                      alt="Proyecto destacado"
-                      fill
-                      className="object-cover"
-                      sizes="100vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent"></div>
-                    <div className="relative mx-auto max-w-lg lg:mx-0 lg:py-20 text-left">
-                        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                        {featuredLote.title.rendered}
-                        <br />
-                        Inicia tu inversión hoy.
-                        </h2>
-                        <p className="mt-6 text-lg leading-8 text-gray-200" dangerouslySetInnerHTML={{ __html: featuredLote.excerpt?.rendered || 'Excelente oportunidad de inversión.' }} />
-                        <div className="mt-10 flex items-center gap-x-6">
-                        <Link
-                            href={`/lote/${featuredLote.slug}`}
-                            className="rounded-full bg-[#F47C20] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#d86816] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#F47C20]"
-                        >
-                            Ver Detalles
-                        </Link>
-                        </div>
-                    </div>
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                  {featuredLotes.map((lote) => (
+                    <Link
+                      key={lote.id}
+                      href={`/lote/${lote.slug}`}
+                      className="group relative block rounded-3xl overflow-hidden shadow-md bg-black h-[260px]"
+                    >
+                      {lote._embedded?.['wp:featuredmedia']?.[0]?.source_url ? (
+                        <img
+                          src={lote._embedded['wp:featuredmedia'][0].source_url}
+                          alt={lote.title.rendered}
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-[#1D293F]/30" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
+                      <div className="relative p-6 sm:p-8 h-full flex flex-col justify-center">
+                        <p className="text-white/90 text-sm">Excelente oportunidad de inversión.</p>
+                        <h3
+                          className="mt-1 text-xl sm:text-2xl font-extrabold text-[#F47C20]"
+                          dangerouslySetInnerHTML={{ __html: lote.title.rendered }}
+                        />
+                        <p className="mt-3 text-white/90">Inicia tu inversión hoy</p>
+                        <span className="mt-5 inline-flex w-max rounded-full bg-[#F47C20] px-5 py-2.5 text-sm font-semibold text-white shadow-sm group-hover:bg-[#d86816]">
+                          Ver Detalles
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
             </div>
         </div>

@@ -15,7 +15,7 @@ export default async function LoteDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
-      <Header />
+      <Header showLogo={false} />
       
       <div className="flex-grow relative w-full">
         <iframe 

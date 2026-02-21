@@ -114,28 +114,31 @@ export async function createLead(formData: FormData) {
 
   try {
     const digits = (phone || '').replace(/\D/g, '')
-    const possibleWhatsappEmail = digits ? `whatsapp+${digits}@lead.local` : null
+    const normalizedPhone = digits || (phone || '').trim()
 
-    // Evitar duplicados globales: un lead es único por teléfono
-    const existing = await prisma.lead.findFirst({
+    const existingLeads = await prisma.lead.findMany({
       where: {
-        OR: [
-          { phone: phone || '' },
-          possibleWhatsappEmail ? { email: possibleWhatsappEmail } : { id: { equals: '' } },
-          email ? { email } : { id: { equals: '' } }
-        ]
+        phone: normalizedPhone
       }
     })
 
-    if (existing) {
-      return { success: true }
+    if (existingLeads.length > 0) {
+      const hasOtherReferrer = existingLeads.some(l => l.referrerId !== referrer.id)
+      if (hasOtherReferrer) {
+        return { success: true }
+      }
+
+      const sameProject = existingLeads.some(l => l.referrerId === referrer.id && l.projectInterest === project)
+      if (sameProject) {
+        return { success: true }
+      }
     }
 
     await prisma.lead.create({
       data: {
         name,
         email,
-        phone,
+        phone: normalizedPhone,
         city,
         projectInterest: project,
         referrerId: referrer.id

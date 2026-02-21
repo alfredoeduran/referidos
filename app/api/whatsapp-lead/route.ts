@@ -59,31 +59,42 @@ export async function POST(req: NextRequest) {
       const digits = phone.replace(/\D/g, '')
       const safePhone = digits || phone
 
-      const possibleWhatsappEmail = `whatsapp+${safePhone}@lead.local`
-      const existing = await prisma.lead.findFirst({
+      const normalizedPhone = safePhone
+      const projectInterest = loteTitle || loteSlug || null
+
+      const existingLeads = await prisma.lead.findMany({
         where: {
-          OR: [
-            { phone },
-            { email: possibleWhatsappEmail }
-          ]
+          phone: normalizedPhone
         }
       })
 
-      if (!existing) {
-        await prisma.lead.create({
-          data: {
-            name: `WhatsApp ${safePhone}`,
-            email: possibleWhatsappEmail,
-            phone,
-            city: null,
-            projectInterest: loteTitle || loteSlug || null,
-            referrerId
-          }
-        })
-        console.log('whatsapp-lead:lead', { createdLead: true })
-      } else {
-        console.log('whatsapp-lead:lead', { createdLead: false, reason: 'duplicate' })
+      if (existingLeads.length > 0) {
+        const hasOtherReferrer = existingLeads.some(l => l.referrerId !== referrerId)
+        if (hasOtherReferrer) {
+          console.log('whatsapp-lead:lead', { createdLead: false, reason: 'phone_owned_by_other_referrer' })
+          return NextResponse.json({ ok: true })
+        }
+
+        const sameProject = existingLeads.some(
+          l => l.referrerId === referrerId && l.projectInterest === projectInterest
+        )
+        if (sameProject) {
+          console.log('whatsapp-lead:lead', { createdLead: false, reason: 'same_project_for_referrer' })
+          return NextResponse.json({ ok: true })
+        }
       }
+
+      await prisma.lead.create({
+        data: {
+          name: `WhatsApp ${normalizedPhone}`,
+          email: `whatsapp+${normalizedPhone}@lead.local`,
+          phone: normalizedPhone,
+          city: null,
+          projectInterest,
+          referrerId
+        }
+      })
+      console.log('whatsapp-lead:lead', { createdLead: true })
     }
 
     return NextResponse.json({ ok: true })

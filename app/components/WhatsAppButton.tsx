@@ -13,27 +13,32 @@ export default function WhatsAppButton({
   loteSlug: string 
 }) {
   const [referralCode, setReferralCode] = useState<string | null>(null)
-  const [showPhoneModal, setShowPhoneModal] = useState(false)
   const [visitorPhone, setVisitorPhone] = useState(() => {
     if (typeof window === 'undefined') return ''
     return localStorage.getItem('visitorPhone') || ''
   })
   const [error, setError] = useState('')
+  const [baseUrl, setBaseUrl] = useState('')
 
   useEffect(() => {
-    const stored = localStorage.getItem('referralCode')
-    if (stored) {
-      setReferralCode(stored)
+    if (typeof window !== 'undefined') {
+      setBaseUrl(window.location.origin)
+      const stored = localStorage.getItem('referralCode')
+      if (stored) {
+        setReferralCode(stored)
+      }
     }
   }, [])
 
   const phoneNumber = '573216583860'
+  const effectiveBaseUrl = baseUrl || 'https://app.goodsco.com'
+  const loteUrl = `${effectiveBaseUrl}/lote/${loteSlug}`
   const message = `Hola 👋
 Quiero invertir en el lote: ${loteTitle}
 ID: ${loteId}
 Referido por: ${referralCode || 'N/A'}
 Teléfono de contacto: ${visitorPhone || 'No proporcionado'}
-Link: https://app.goodsco.com/lote/${loteSlug}`
+Link: ${loteUrl}`
 
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
 
@@ -43,9 +48,15 @@ Link: https://app.goodsco.com/lote/${loteSlug}`
     return digits.length >= 10 && digits.length <= 12
   }
 
-  const sendToCrmAndOpen = async () => {
+  const phoneStatus = visitorPhone
+    ? validatePhone(visitorPhone)
+      ? 'valid'
+      : 'invalid'
+    : 'empty'
+
+  const sendToCrmAndOpen = () => {
     try {
-      await fetch('/api/whatsapp-lead', {
+      fetch('/api/whatsapp-lead', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -57,31 +68,24 @@ Link: https://app.goodsco.com/lote/${loteSlug}`
           loteSlug,
           referralCode
         })
+      }).catch(err => {
+        console.error('Error enviando lead de WhatsApp', err)
       })
     } catch (err) {
       console.error('Error enviando lead de WhatsApp', err)
     } finally {
-      window.open(whatsappUrl, '_blank')
+      window.location.href = whatsappUrl
     }
   }
 
   const handleOpenWhatsApp = () => {
     if (!validatePhone(visitorPhone)) {
-      setShowPhoneModal(true)
-      return
-    }
-    sendToCrmAndOpen()
-  }
-
-  const handleConfirmPhone = () => {
-    if (!validatePhone(visitorPhone)) {
       setError('Ingresa un número válido (10-12 dígitos).')
       return
     }
-    localStorage.setItem('visitorPhone', visitorPhone)
-    setShowPhoneModal(false)
-    setError('')
-    // Registrar en CRM y luego abrir WhatsApp
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('visitorPhone', visitorPhone)
+    }
     sendToCrmAndOpen()
   }
 
@@ -95,6 +99,28 @@ Link: https://app.goodsco.com/lote/${loteSlug}`
             </div>
         )}
 
+        <div className="space-y-2">
+          <label htmlFor="visitorPhone" className="text-xs font-semibold text-gray-700">
+            Número de teléfono
+          </label>
+          <input
+            id="visitorPhone"
+            type="tel"
+            value={visitorPhone}
+            onChange={e => { setVisitorPhone(e.target.value); setError('') }}
+            placeholder="Ej: 3001234567 o +573001234567"
+            className={
+              'w-full rounded-lg px-3 py-2 focus:outline-none focus:ring-2 text-gray-900 ' +
+              (phoneStatus === 'valid'
+                ? 'border-green-500 focus:ring-green-500'
+                : phoneStatus === 'invalid'
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-200 focus:ring-green-500')
+            }
+          />
+          {error && <p className="text-xs text-red-600">{error}</p>}
+        </div>
+
         <button
           onClick={handleOpenWhatsApp}
           className="block w-full text-center bg-green-500 text-white font-bold py-4 rounded-lg hover:bg-green-600 transition shadow-lg text-lg flex items-center justify-center gap-2"
@@ -107,46 +133,9 @@ Link: https://app.goodsco.com/lote/${loteSlug}`
             <div className="text-center mt-4">
                 <p className="text-xs text-gray-500 mb-2">Tu código de referido activo para este lote:</p>
                 <div className="flex justify-center">
-                    <QRCodeSVG value={`https://app.goodsco.com/lote/${loteSlug}?ref=${referralCode}`} size={100} />
+                    <QRCodeSVG value={`${loteUrl}?ref=${referralCode}`} size={100} />
                 </div>
             </div>
-        )}
-
-        {showPhoneModal && (
-          <div className="fixed inset-0 z-[1000] bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Antes de continuar</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Ingresa tu número de teléfono para que podamos contactarte y registrar tu interés.
-              </p>
-              <div className="space-y-2">
-                <label htmlFor="visitorPhone" className="text-xs font-semibold text-gray-700">Número de teléfono</label>
-                <input
-                  id="visitorPhone"
-                  type="tel"
-                  value={visitorPhone}
-                  onChange={e => { setVisitorPhone(e.target.value); setError('') }}
-                  placeholder="Ej: 3001234567 o +573001234567"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-                {error && <p className="text-xs text-red-600">{error}</p>}
-              </div>
-              <div className="mt-6 flex items-center justify-end gap-2">
-                <button
-                  onClick={() => { setShowPhoneModal(false); setError('') }}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleConfirmPhone}
-                  className="px-4 py-2 rounded-lg text-sm font-bold bg-green-500 text-white hover:bg-green-600"
-                >
-                  Continuar a WhatsApp
-                </button>
-              </div>
-            </div>
-          </div>
         )}
     </div>
   )
