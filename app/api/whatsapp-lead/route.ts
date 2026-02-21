@@ -55,7 +55,29 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    if (referrerId) {
+    let assignedReferrerId = referrerId
+    if (!assignedReferrerId) {
+      const adminUser = await prisma.user.findFirst({
+        where: { role: { in: ['ADMIN', 'SUPERADMIN'] } },
+        orderBy: { createdAt: 'asc' }
+      })
+      assignedReferrerId = adminUser?.id || null
+      if (!assignedReferrerId) {
+        const envAdminId = process.env.DEFAULT_ADMIN_ID
+        if (envAdminId) {
+          const envAdmin = await prisma.user.findUnique({ where: { id: envAdminId } })
+          if (envAdmin && ['ADMIN', 'SUPERADMIN'].includes(envAdmin.role)) {
+            assignedReferrerId = envAdmin.id
+            console.log('whatsapp-lead:adminAssignEnv', { usedEnvAdmin: true })
+          } else {
+            console.log('whatsapp-lead:adminAssignEnv', { usedEnvAdmin: false })
+          }
+        }
+      }
+      console.log('whatsapp-lead:adminAssign', { hasAdmin: !!assignedReferrerId })
+    }
+
+    if (assignedReferrerId) {
       const digits = phone.replace(/\D/g, '')
       const safePhone = digits || phone
 
@@ -69,14 +91,14 @@ export async function POST(req: NextRequest) {
       })
 
       if (existingLeads.length > 0) {
-        const hasOtherReferrer = existingLeads.some(l => l.referrerId !== referrerId)
+        const hasOtherReferrer = existingLeads.some(l => l.referrerId !== assignedReferrerId)
         if (hasOtherReferrer) {
           console.log('whatsapp-lead:lead', { createdLead: false, reason: 'phone_owned_by_other_referrer' })
           return NextResponse.json({ ok: true })
         }
 
         const sameProject = existingLeads.some(
-          l => l.referrerId === referrerId && l.projectInterest === projectInterest
+          l => l.referrerId === assignedReferrerId && l.projectInterest === projectInterest
         )
         if (sameProject) {
           console.log('whatsapp-lead:lead', { createdLead: false, reason: 'same_project_for_referrer' })
@@ -91,7 +113,7 @@ export async function POST(req: NextRequest) {
           phone: normalizedPhone,
           city: null,
           projectInterest,
-          referrerId
+          referrerId: assignedReferrerId
         }
       })
       console.log('whatsapp-lead:lead', { createdLead: true })

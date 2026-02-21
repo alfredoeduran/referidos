@@ -101,6 +101,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .filter(l => l.commission?.status === 'PAID')
     .reduce((acc, l) => acc + Number(l.commission?.amount || 0), 0)
 
+  const adminCount = await prisma.user.count({
+    where: { role: { in: ['ADMIN', 'SUPERADMIN'] } }
+  })
+
   const buildPeriodHref = (period: 'day' | 'week' | 'month') => {
     const params = new URLSearchParams()
     Object.entries(filters || {}).forEach(([key, value]) => {
@@ -121,6 +125,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     <div className="grid grid-cols-12 gap-6">
         {/* Left/Middle Column (KPIs + Partners) */}
         <div className="col-span-12 lg:col-span-9 space-y-6">
+                    {adminCount === 0 && (
+                      <div className="p-4 rounded-2xl border border-orange-300 bg-orange-50 text-orange-800 text-sm font-semibold">
+                        No hay usuarios ADMIN/SUPERADMIN. Crea uno en “Partners” o define DEFAULT_ADMIN_ID en variables de entorno.
+                      </div>
+                    )}
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                       <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                         Periodo: <span className="text-[#2D2D2D]">{periodLabel}</span>
