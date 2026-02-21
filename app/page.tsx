@@ -14,7 +14,7 @@ export default async function Home() {
           <Link href="/" className="-m-1.5 p-1.5">
             <span className="sr-only">Goods & Co</span>
             <img
-                className="h-12 w-auto"
+                className="h-16 w-auto"
                 src="https://goodsco.com.co/wp-content/uploads/elementor/thumbs/logo-rhve9fe880lsryba0aexm0awj2nb61s6ec3w0mx2d8.png"
                 alt="Goods & Co"
             />
@@ -36,8 +36,8 @@ export default async function Home() {
           className="object-cover"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-black/60"></div>
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/30 to-transparent"></div>
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-3xl py-28 sm:py-44 lg:py-56 text-center">
             <div className="hidden sm:mb-8 sm:flex sm:justify-center">
@@ -98,6 +98,11 @@ export default async function Home() {
                 <p className="mt-2 text-base leading-7 text-gray-600">Recibe comisiones cuando tus referidos concreten su inversión.</p>
               </div>
             </div>
+            <div className="mt-10 flex items-center justify-center">
+              <Link href="/register" className="rounded-full border border-[#F47C20] px-5 py-3 text-sm font-semibold text-[#F47C20] hover:bg-[#FFF3EB]">
+                Quiero ser Partner
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -111,7 +116,10 @@ export default async function Home() {
                       <h2 className="text-xs font-semibold uppercase tracking-widest text-[#6b7280]">Oportunidades</h2>
                       <p className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F47C20]">Proyectos destacados</p>
                     </div>
-                    <Link href="/lotes" className="rounded-full bg-[#F47C20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#d86816]">Ver todos los proyectos</Link>
+                    <div className="flex gap-3">
+                      <Link href="/lotes" className="rounded-full bg-[#F47C20] px-4 py-2 text-sm font-semibold text-white hover:bg-[#d86816]">Ver todos los proyectos</Link>
+                      <Link href="/register" className="rounded-full border border-[#F47C20] px-4 py-2 text-sm font-semibold text-[#F47C20] hover:bg-[#FFF3EB]">Quiero ser Partner</Link>
+                    </div>
                 </div>
                 <div className="relative isolate overflow-hidden px-6 py-16 shadow-2xl sm:rounded-3xl sm:px-16 lg:px-24 border border-white/10">
                     <Image

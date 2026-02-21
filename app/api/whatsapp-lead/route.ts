@@ -59,17 +59,31 @@ export async function POST(req: NextRequest) {
       const digits = phone.replace(/\D/g, '')
       const safePhone = digits || phone
 
-      await prisma.lead.create({
-        data: {
-          name: `WhatsApp ${safePhone}`,
-          email: `whatsapp+${safePhone}@lead.local`,
-          phone,
-          city: null,
-          projectInterest: loteTitle || loteSlug || null,
-          referrerId
+      const possibleWhatsappEmail = `whatsapp+${safePhone}@lead.local`
+      const existing = await prisma.lead.findFirst({
+        where: {
+          OR: [
+            { phone },
+            { email: possibleWhatsappEmail }
+          ]
         }
       })
-      console.log('whatsapp-lead:lead', { createdLead: true })
+
+      if (!existing) {
+        await prisma.lead.create({
+          data: {
+            name: `WhatsApp ${safePhone}`,
+            email: possibleWhatsappEmail,
+            phone,
+            city: null,
+            projectInterest: loteTitle || loteSlug || null,
+            referrerId
+          }
+        })
+        console.log('whatsapp-lead:lead', { createdLead: true })
+      } else {
+        console.log('whatsapp-lead:lead', { createdLead: false, reason: 'duplicate' })
+      }
     }
 
     return NextResponse.json({ ok: true })

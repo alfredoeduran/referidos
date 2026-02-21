@@ -113,6 +113,24 @@ export async function createLead(formData: FormData) {
   }
 
   try {
+    const digits = (phone || '').replace(/\D/g, '')
+    const possibleWhatsappEmail = digits ? `whatsapp+${digits}@lead.local` : null
+
+    // Evitar duplicados globales: un lead es único por teléfono
+    const existing = await prisma.lead.findFirst({
+      where: {
+        OR: [
+          { phone: phone || '' },
+          possibleWhatsappEmail ? { email: possibleWhatsappEmail } : { id: { equals: '' } },
+          email ? { email } : { id: { equals: '' } }
+        ]
+      }
+    })
+
+    if (existing) {
+      return { success: true }
+    }
+
     await prisma.lead.create({
       data: {
         name,

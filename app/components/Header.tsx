@@ -14,7 +14,7 @@ export default async function Header({ variant = 'default' }: { variant?: 'defau
               <img
                 src="https://goodsco.com.co/wp-content/uploads/elementor/thumbs/logo-rhve9fe880lsryba0aexm0awj2nb61s6ec3w0mx2d8.png"
                 alt="Goods & Co Logo"
-                className="h-12 w-auto transition-transform group-hover:scale-105"
+                className="h-16 w-auto transition-transform group-hover:scale-105"
               />
             </Link>
           </div>
